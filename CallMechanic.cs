@@ -11,6 +11,7 @@ namespace OnCallMechanic.API
     internal class MechAction
     {
         private Mechanic mechanic;
+        private bool CanBeCleaned;
 
         internal MechAction()
         {
@@ -18,22 +19,25 @@ namespace OnCallMechanic.API
         }
         internal void Drive()
         {
-          
-            GameFiber.StartNew(Checks);
 
+             GameFiber.StartNew(Checks, "EventChecker");
+
+   
             mechanic.Dispatch();
             Arrived += (object sender, EventArgs e) => {
-
-                mechanic.Repair();
+               
+                
                 Game.DisplaySubtitle("[Mechanic] Aight let's get to work!");
+                mechanic.Repair();
+                GameFiber.Yield();
                 
             };
             Repaired += (object sender, EventArgs e) =>
             {
                 Game.DisplaySubtitle("[Mechanic] There you go!");
                 mechanic.LeaveAssignment();
-                GameFiber.Sleep(10000);
                 mechanic.Dismiss();
+                GameFiber.Yield();
             };
 
            /* Left += (object sender, EventArgs e) =>
@@ -47,8 +51,12 @@ namespace OnCallMechanic.API
 
         private void Checks()
         {
-            while (true)
+            while(true)
             {
+                if (CanBeCleaned)
+                {
+                    break;
+                }
                 EventChecks();
                 GameFiber.Yield();
             }
@@ -57,14 +65,17 @@ namespace OnCallMechanic.API
 
        private void EventChecks()
         {
-            if (mechanic.PMechanic.DistanceTo(Game.LocalPlayer.Character) <= 10f && mechanic.PMechanic.Speed <= 0.1f)
+            DateTime time = DateTime.Now;
+            if (mechanic.PMechanic.DistanceTo(Game.LocalPlayer.Character.LastVehicle) <= 10f && mechanic.PMechanic.Speed <= 0.1f)
             {
-                mechanic.isDriving = false;
+
                 Arrived(this, EventArgs.Empty);
 
             }
+
             if (Game.LocalPlayer.Character.LastVehicle.Health == 1000)
             {
+                CanBeCleaned = true;
                 Repaired(this, EventArgs.Empty);
             }
         }
@@ -76,4 +87,3 @@ namespace OnCallMechanic.API
 
     }
 }
-

@@ -2,25 +2,24 @@
 			COPYRIGHT © DAERICH 2020
 ALL RIGHTS RESERVED EXCEPT OTHERWISE STATED IN COPYRIGHT.TXT
    ------------------------------------------ */
-using System;
 using Rage;
-using LSPD_First_Response.Mod.API;
+using System;
 using LSPD_First_Response.Engine.Scripting.Entities;
-using System.Text;
 
 namespace OnCallMechanic
 {
     internal class Mechanic
     {
         internal Vehicle MCar { get; set; }
+
+        internal DateTime _dispatchtime;
+
         private Vector3 Spawn = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(50f));
         private Vector3 Position;
         private Blip blip;
         internal Ped PMechanic { get; set; }
-        private static Ped Player = Game.LocalPlayer.Character;
-        
-        internal bool isDriving { get; set; }
-        internal bool hasArrived { get; set; }
+        private  Ped Player = Game.LocalPlayer.Character;
+    
 
         internal Mechanic()
         {
@@ -29,6 +28,7 @@ namespace OnCallMechanic
             {
                 IsInvincible = true,
                 IsPersistent = true,
+                IsFireProof = true,
                 BlockPermanentEvents = true
             };
 
@@ -47,27 +47,23 @@ namespace OnCallMechanic
 
         internal void Dispatch()
         {
-            PMechanic.Tasks.DriveToPosition(MCar, Position, 20f, VehicleDrivingFlags.Emergency, 10f);
-            isDriving = true;
-            GameFiber.Yield();
+            PMechanic.Tasks.DriveToPosition(MCar, Position, 20f, VehicleDrivingFlags.Normal, 5f);
         }
 
         internal void Repair()
         {
-            PMechanic.Detach();
-            PMechanic.Tasks.LeaveVehicle(LeaveVehicleFlags.LeaveDoorOpen);
-            PMechanic.Tasks.GoStraightToPosition(Player.LastVehicle.Position, 20f, Player.LastVehicle.Heading, 0, 0);
-            PMechanic.Tasks.Cower(1000);
+            PMechanic.Tasks.LeaveVehicle(LeaveVehicleFlags.None).WaitForCompletion();
+            MCar = PMechanic.LastVehicle;
+            PMechanic.WarpIntoVehicle(Player.LastVehicle, (int)VehicleSeat.Driver);
+            GameFiber.Sleep(2000);
             PMechanic.Tasks.Clear();
             Player.LastVehicle.Repair();
-            GameFiber.Yield();
         }
 
         internal void LeaveAssignment()
         {
-            PMechanic.Tasks.EnterVehicle(MCar,(int)VehicleSeat.Driver);
+            PMechanic.WarpIntoVehicle(MCar, (int)VehicleSeat.Driver);
             PMechanic.Tasks.CruiseWithVehicle(20f);
-            GameFiber.Yield();
         }
         internal void Dismiss()
         {
@@ -75,7 +71,6 @@ namespace OnCallMechanic
             if(MCar.Exists()) { MCar.Dismiss(); }
             if (blip.Exists()) { blip.Delete(); }
 
-            GameFiber.Yield();
         }
 
     }
