@@ -2,10 +2,7 @@
 			COPYRIGHT © DAERICH 2020
 ALL RIGHTS RESERVED EXCEPT OTHERWISE STATED IN COPYRIGHT.TXT
    ------------------------------------------ */
-using System;
 using Rage;
-using LSPD_First_Response.Mod.API;
-using PoliceSmartRadio.API;
 
 namespace OnCallMechanic.API
 {

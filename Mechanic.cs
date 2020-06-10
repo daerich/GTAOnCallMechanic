@@ -3,21 +3,19 @@
 ALL RIGHTS RESERVED EXCEPT OTHERWISE STATED IN COPYRIGHT.TXT
    ------------------------------------------ */
 using Rage;
-using System;
 using LSPD_First_Response.Engine.Scripting.Entities;
 
 namespace OnCallMechanic
 {
     internal class Mechanic
     {
-        internal Vehicle MCar { get; set; }
+        internal Vehicle MCar { get; private set; }
 
-        internal DateTime _dispatchtime;
 
         private Vector3 Spawn = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(50f));
         private Vector3 Position;
         private Blip blip;
-        internal Ped PMechanic { get; set; }
+        internal Ped PMechanic { get; private set; }
         private  Ped Player = Game.LocalPlayer.Character;
     
 
@@ -47,7 +45,7 @@ namespace OnCallMechanic
 
         internal void Dispatch()
         {
-            PMechanic.Tasks.DriveToPosition(MCar, Position, 20f, VehicleDrivingFlags.Normal, 5f);
+            PMechanic.Tasks.DriveToPosition(MCar, Position, 15f, VehicleDrivingFlags.Emergency, 5f);
         }
 
         internal void Repair()
@@ -63,7 +61,7 @@ namespace OnCallMechanic
         internal void LeaveAssignment()
         {
             PMechanic.WarpIntoVehicle(MCar, (int)VehicleSeat.Driver);
-            PMechanic.Tasks.CruiseWithVehicle(20f);
+            PMechanic.Tasks.CruiseWithVehicle(15f, VehicleDrivingFlags.Normal);
         }
         internal void Dismiss()
         {
