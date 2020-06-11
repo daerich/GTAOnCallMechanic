@@ -63,6 +63,11 @@ namespace OnCallMechanic
             PMechanic.WarpIntoVehicle(MCar, (int)VehicleSeat.Driver);
             PMechanic.Tasks.CruiseWithVehicle(15f, VehicleDrivingFlags.Normal);
         }
+
+        internal bool isValid()
+        {
+            return PMechanic.IsValid() && MCar.IsValid();
+        }
         internal void Dismiss()
         {
             if(PMechanic.Exists()){ PMechanic.Dismiss(); }

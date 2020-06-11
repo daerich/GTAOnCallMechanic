@@ -11,26 +11,18 @@ namespace OnCallMechanic.API
     {
         private Mechanic mechanic;
         private bool CanBeCleaned;
-
         internal MechAction()
         {
             mechanic = new Mechanic();
         }
         internal void Drive()
         {
-            if (!Game.LocalPlayer.Character.LastVehicle.Exists() || !Game.LocalPlayer.Character.LastVehicle.IsValid())
-            {
-                Game.DisplaySubtitle("[Mechanic] I'm sorry I could not pinpoint your vehicle!");
-                mechanic.Dismiss();
-            }
-            else
+            if (Game.LocalPlayer.Character.LastVehicle.Exists())
             {
                 GameFiber.StartNew(Checks, "EventChecker");
                 mechanic.Dispatch();
                 Arrived += (object sender, EventArgs e) =>
                 {
-
-
                     Game.DisplaySubtitle("[Mechanic] Aight let's get to work!");
                     mechanic.Repair();
                     GameFiber.Yield();
@@ -39,29 +31,32 @@ namespace OnCallMechanic.API
                 Repaired += (object sender, EventArgs e) =>
                 {
                     Game.DisplaySubtitle("[Mechanic] There you go!");
-                    mechanic.LeaveAssignment();
+                    if (mechanic.PMechanic.IsInAnyVehicle(false))
+                    {
+                        mechanic.LeaveAssignment();
+                    }
                     mechanic.Dismiss();
                     GameFiber.Yield();
                 };
             }
+            else
+            {
+                Game.DisplaySubtitle("[Mechanic] I'm sorry I could not pinpoint your vehicle!");
+                mechanic.Dismiss();
 
-            /* Left += (object sender, EventArgs e) =>
-             {
-                 mechanic.Dismiss();
-             };*/
-
-
+            }
 
         }
 
         private void Checks()
         {
-            while(!CanBeCleaned)
+            while (!CanBeCleaned && mechanic.isValid())
             {
                 EventChecks();
                 GameFiber.Yield();
             }
             
+
         }
 
        private void EventChecks()
@@ -81,10 +76,6 @@ namespace OnCallMechanic.API
         }
         internal event EventHandler Arrived;
         internal event EventHandler Repaired;
-       // internal event EventHandler Left;
-
-
 
     }
 }
-
