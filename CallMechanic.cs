@@ -11,15 +11,19 @@ namespace OnCallMechanic.API
     {
         private Mechanic mechanic;
         private bool CanBeCleaned;
+        private int counter;
+        private bool HasArrived;
         internal MechAction()
         {
             mechanic = new Mechanic();
+            counter = 0;
         }
         internal void Drive()
         {
             if (Game.LocalPlayer.Character.LastVehicle.Exists())
             {
                 GameFiber.StartNew(Checks, "EventChecker");
+                GameFiber.StartNew(Counter, "Counter");
                 mechanic.Dispatch();
                 Arrived += (object sender, EventArgs e) =>
                 {
@@ -38,6 +42,12 @@ namespace OnCallMechanic.API
                     mechanic.Dismiss();
                     GameFiber.Yield();
                 };
+                Broken += (object sender, EventArgs e) =>
+                {
+                    Game.DisplaySubtitle("*The Mechanic has been held up in traffic and never arrived*");
+                    mechanic.PMechanic.Tasks.Clear();
+                    mechanic.Dismiss();
+                };
             }
             else
             {
@@ -48,9 +58,18 @@ namespace OnCallMechanic.API
 
         }
 
-        private void Checks()
+        private void Counter()
         {
             while (!CanBeCleaned && mechanic.isValid())
+            {
+                counter++;
+                GameFiber.Sleep(1000);
+            }
+        }
+
+        private void Checks()
+        {
+            while (!CanBeCleaned && mechanic.isValid() && !HasArrived)
             {
                 EventChecks();
                 GameFiber.Yield();
@@ -65,6 +84,7 @@ namespace OnCallMechanic.API
             {
 
                 Arrived(this, EventArgs.Empty);
+                HasArrived = true;
 
             }
 
@@ -73,9 +93,16 @@ namespace OnCallMechanic.API
                 CanBeCleaned = true;
                 Repaired(this, EventArgs.Empty);
             }
+            if(counter == 20)
+            {
+                CanBeCleaned = true;
+                Broken(this, EventArgs.Empty);
+            }
+
         }
         internal event EventHandler Arrived;
         internal event EventHandler Repaired;
+        internal event EventHandler Broken;
 
     }
 }
